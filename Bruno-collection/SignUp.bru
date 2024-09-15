@@ -1,0 +1,18 @@
+meta {
+  name: SignUp
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://127.0.0.1:8000/store/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username":"abdoulaye0@gmail.com",
+    "password":"passer"
+  }
+}
