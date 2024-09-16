@@ -4,6 +4,7 @@ from django.db import models
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.utils import timezone
+import datetime
 
 
 class Category(models.Model):
@@ -56,7 +57,14 @@ class Customer(AbstractBaseUser):
         max_length=50, choices=Role.choices, default=Role.USER)
     password = models.CharField(max_length=255)
     is_confirmed = models.BooleanField(default=False)
-
+    city = models.CharField(max_length=255, null=True)
+    state = models.CharField(max_length=255, null=True)
+    country = models.CharField(max_length=255, null=True)
+    created_at = models.DateField(auto_now=True)
+    updated_at = models.DateField(auto_now=True)
+    is_confirmed = models.BooleanField(default=False)
+    otp = models.CharField(max_length=4, null=True)
+    otp_expires_at = models.DateTimeField(null=True)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
@@ -69,7 +77,7 @@ class Review(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     rating = models.IntegerField()
     content = models.CharField(max_length=255)
-    date = models.DateTimeField(default=timezone.now)
+    date = models.DateField(auto_now=True)
 
     def __str__(self):
         return f"Review by {self.customer} on {self.product}"
