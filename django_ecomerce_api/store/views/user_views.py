@@ -9,6 +9,7 @@ from ..serializer import UserSerializer
 from ..models import Customer
 from ..utils import generate_otp, send_email, HTTPResponse, is_otp_valid
 from datetime import datetime, timedelta
+from django.contrib.auth.hashers import make_password, check_password, is_password_usable
 
 
 @require_http_methods(["POST"])
@@ -29,8 +30,7 @@ def login(request):
                 'message': 'User not confirmed'
             }
             return HTTPResponse(response, 400)
-        # if not user.check_password(data['password']):
-        if not user.password == data['password']:
+        if not user.check_password(data['password']):
             response = {
                 'status': 'error',
                 'message': 'Invalid password'
@@ -61,9 +61,10 @@ def register(request):
             }
             return HTTPResponse(response, 409)
 
+        hashed_password = make_password(data['password'])
         user = Customer.objects.create(
             email=data['email'],
-            password=data['password'],
+            password=hashed_password,
             otp=generate_otp(),
             otp_expires_at=datetime.now() + timedelta(minutes=5),  # Expires in 5 minutes
         )
@@ -187,10 +188,53 @@ def reset_password(request):
 @require_http_methods(["POST"])
 @csrf_exempt
 def change_password(request):
-    return HttpResponse("Change password successful")
+    try:
+        data = json.loads(request.body)
+        user = Customer.objects.filter(email=data['email']).first()
+        if not user:
+            response = {
+                'status': 'error',
+                'message': 'User not found'
+            }
+            return HTTPResponse(response, 400)
+        user.password = make_password(data['password'])
+        user.save()
+        response = {
+            'status': 'success',
+            'message': 'Password changed successfully'
+        }
+        return HTTPResponse(response, 200)
+    except Exception as e:
+        response = {
+            'status': 'error',
+            'message': "Error while changing password",
+        }
+        return HTTPResponse(response, 400)
 
 
 @require_http_methods(["POST"])
 @csrf_exempt
 def update_profile(request):
-    return HttpResponse("Update profile successful")
+    try:
+        data = json.loads(request.body)
+        user = Customer.objects.filter(email=data['email']).first()
+        if not user:
+            response = {
+                'status': 'error',
+                'message': 'User not found'
+            }
+            return HTTPResponse(response, 400)
+        user.first_name = data['first_name']
+        user.last_name = data['last_name']
+        user.save()
+        response = {
+            'status': 'success',
+            'message': 'Profile updated successfully'
+        }
+        return HTTPResponse(response, 400)
+    except:
+        response = {
+            'status': 'error',
+            'message': "Error while updating profile",
+        }
+        return HTTPResponse(response, 400)

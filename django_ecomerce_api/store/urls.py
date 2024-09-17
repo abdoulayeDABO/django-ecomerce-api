@@ -1,4 +1,6 @@
 from django.urls import path
+
+from .views.product_views import get_product, get_products
 from .views.user_views import register, activate_account, change_password, confirm_reset_password, forgot_password, login, logout, reset_password, update_profile, verify_email
 
 urlpatterns = [
@@ -13,4 +15,6 @@ urlpatterns = [
     path("change_password", change_password, name="change_password"),
     path("update_profile", update_profile, name="update_profile"),
     path("activate_account", activate_account, name="activate_account"),
+    path("products", get_products, name="get_products"),
+    path("product/<int:id>", get_product, name="get_product"),
 ]

@@ -1,0 +1,18 @@
+meta {
+  name: Sign in
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://127.0.0.1:8000/store/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email":"abdoulayeleom10@gmail.com",
+    "password":"passer"
+  }
+}

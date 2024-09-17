@@ -1,6 +1,5 @@
 from django.db import models
 
-# Create your models here.
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.utils import timezone
@@ -20,6 +19,9 @@ class Product(models.Model):
     price = models.FloatField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     in_stock = models.BooleanField(default=True)
+    image = models.ImageField(upload_to='products', null=True)
+    created_at = models.DateTimeField(auto_now=True, null=True)
+    image_url = models.CharField(null=True)
 
     def __str__(self):
         return self.name
@@ -68,8 +70,8 @@ class Customer(AbstractBaseUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
-    # def __str__(self):
-    #     return self.email
+    def __str__(self):
+        return self.email
 
 
 class Review(models.Model):
