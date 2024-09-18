@@ -9,16 +9,30 @@ from ..serializer import ProductSerializer, UserSerializer
 from ..models import Product
 from ..utils import generate_otp, send_email, HTTPResponse, is_otp_valid
 from datetime import datetime, timedelta
+from django.core.paginator import Paginator
 
 
 @require_http_methods(["GET"])
 @csrf_exempt
 def get_products(request):
     try:
+        print(request.GET)
         products = Product.objects.all()
+        paginator = Paginator(products, 5)  # Number of items per page
+        page_number = request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
         response = {
             'status': 'success',
-            'data': ProductSerializer(products, many=True).data
+            'data': ProductSerializer(page_obj, many=True).data,
+            'meta': {
+                'total': paginator.count,
+                'per_page': paginator.per_page,
+                'current_page': page_obj.number,
+                'has_next': page_obj.has_next(),
+                'has_previous': page_obj.has_previous(),
+                'next': page_obj.next_page_number(),
+                'last': paginator.num_pages,
+            }
         }
         return HTTPResponse(response, 200)
     except Exception as e:
