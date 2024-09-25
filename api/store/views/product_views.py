@@ -5,6 +5,9 @@ from django.core.mail import send_mail
 import json
 from django.http import HttpResponse
 from django.core.exceptions import ValidationError
+
+from ..decorators.auth import login_required
+
 from ..serializer import ProductSerializer, UserSerializer
 from ..models import Product
 from ..utils import generate_otp, send_email, HTTPResponse, is_otp_valid
@@ -14,11 +17,12 @@ from django.core.paginator import Paginator
 
 @require_http_methods(["GET"])
 @csrf_exempt
+@login_required
 def get_products(request):
     try:
         print(request.GET)
         products = Product.objects.all()
-        paginator = Paginator(products, 5)  # Number of items per page
+        paginator = Paginator(products, 2)  # Number of items per page
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
         response = {
@@ -45,6 +49,7 @@ def get_products(request):
 
 @require_http_methods(["GET"])
 @csrf_exempt
+@login_required
 def get_product(request, id):
     try:
         product = Product.objects.filter(id=id).first()

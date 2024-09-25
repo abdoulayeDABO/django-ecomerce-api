@@ -47,9 +47,7 @@ def index(request):
 urlpatterns = [
     path('', index, name='index'),
     path('admin/', admin.site.urls),
-
     path('api-auth/', include('rest_framework.urls')),
-    # path('auth/', include('auth.urls')),
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0),
          name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger',
@@ -58,7 +56,6 @@ urlpatterns = [
          cache_timeout=0), name='schema-redoc'),
     path('docs/', include_docs_urls(title='Django Ecommerce API')),
 
-    # Routes for the auth app
+    # Routes for api
     path('store/', include('store.urls')),
-
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

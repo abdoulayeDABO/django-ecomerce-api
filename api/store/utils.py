@@ -10,6 +10,9 @@ import random
 import string
 import time
 from django.utils import timezone
+import jwt
+from dotenv import dotenv_values
+config = dotenv_values(".env")
 
 # class Response(object):
 #     def __init__(self, status, message, data):
@@ -77,3 +80,12 @@ def is_otp_valid(otp_input, otp_storage, expire_at):
         return True
     else:
         return False
+
+
+
+def checkToken (token):
+    try:
+        decoded = jwt.decode(token, config['JWT_SECRET'], algorithms=['HS256'])
+        return decoded
+    except jwt.ExpiredSignatureError:
+        return None

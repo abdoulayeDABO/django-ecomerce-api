@@ -5,44 +5,42 @@ from django.core.mail import send_mail
 import json
 from django.http import HttpResponse
 from django.core.exceptions import ValidationError
+from ..decorators.auth import login_required
 from ..serializer import UserSerializer
 from ..models import Customer
 from ..utils import generate_otp, send_email, HTTPResponse, is_otp_valid
 from datetime import datetime, timedelta
 from django.contrib.auth.hashers import make_password, check_password, is_password_usable
+import jwt
+from dotenv import dotenv_values
+config = dotenv_values(".env")
 
 
 @require_http_methods(["POST"])
 @csrf_exempt
 def login(request):
+    response = {
+        'status': 'error',
+        'message': ''
+    }
     try:
         data = json.loads(request.body)
         user = Customer.objects.filter(email=data['email']).first()
         if not user:
-            response = {
-                'status': 'error',
-                'message': 'User not found'
-            }
+            response['message'] = 'User not found'
             return HTTPResponse(response, 400)
         if not user.is_confirmed:
-            response = {
-                'status': 'error',
-                'message': 'User not confirmed'
-            }
+            response['message'] = 'Account not activated'
             return HTTPResponse(response, 400)
         if not user.check_password(data['password']):
-            response = {
-                'status': 'error',
-                'message': 'Invalid password'
-            }
+            response['message'] = 'Invalid password'
             return HTTPResponse(response, 400)
-        return HTTPResponse({'status': 'success', 'message': 'Login successful', 'data': UserSerializer(user).data}, 200)
+        secret_token = jwt.encode(
+            {"token": user.id}, config['JWT_SECRET'], algorithm="HS256")
+        return HTTPResponse({'status': 'success', 'message': 'Login successful', 'data': {"user": UserSerializer(user).data, "secret_token": secret_token}}, 200)
 
     except Exception as e:
-        response = {
-            'status': 'error',
-            'message': f"Error while login {str(e)} Try again later",
-        }
+        response['message'] = f"Error while logging in {str(e)}"
         return HTTPResponse(response, 500)
 
 
@@ -157,6 +155,7 @@ def resend_activation_email(request):
 
 @require_http_methods(["POST"])
 @csrf_exempt
+@login_required
 def logout(request):
     return HttpResponse("Logout successful")
 
@@ -187,6 +186,7 @@ def reset_password(request):
 
 @require_http_methods(["POST"])
 @csrf_exempt
+@login_required
 def change_password(request):
     try:
         data = json.loads(request.body)
@@ -195,6 +195,12 @@ def change_password(request):
             response = {
                 'status': 'error',
                 'message': 'User not found'
+            }
+            return HTTPResponse(response, 400)
+        if not user.check_password(data['password']):
+            response = {
+                'status': 'error',
+                'message': 'Invalid password'
             }
             return HTTPResponse(response, 400)
         user.password = make_password(data['password'])
@@ -214,6 +220,7 @@ def change_password(request):
 
 @require_http_methods(["POST"])
 @csrf_exempt
+@login_required
 def update_profile(request):
     try:
         data = json.loads(request.body)
